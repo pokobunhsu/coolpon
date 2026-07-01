@@ -123,6 +123,9 @@
     .menu-action-btn { min-height: 48px; border-radius: 16px; padding: 12px 14px; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 800; transition: transform 0.15s, background-color 0.15s; }
     .menu-action-btn:active { transform: scale(0.98); }
     .import-status { min-height: 18px; }
+    .toast { position: fixed; left: 50%; bottom: max(92px, calc(env(safe-area-inset-bottom) + 92px)); z-index: 80; transform: translateX(-50%) translateY(16px); opacity: 0; pointer-events: none; background: rgba(17,24,39,0.94); color: white; border-radius: 999px; padding: 11px 16px; font-size: 14px; font-weight: 700; box-shadow: 0 12px 30px rgba(0,0,0,0.18); transition: opacity 0.2s ease, transform 0.2s ease; max-width: calc(100vw - 32px); text-align: center; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .saving-disabled { opacity: 0.65; pointer-events: none; }
     .gesture-zoom-info { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; pointer-events: none; }
   </style>
   <script src="/_sdk/a57e1ce6823cfcdc.editing_sdk.js" integrity="sha512-kNK9Lfxs3JxWT717gHDYE+wlveaAj/VZXdy7sZdJAoa7Ps3DhgunLxr4od2Pr1ZqeSpJV2bST0X2ZhdP0AnInQ=="></script>
@@ -254,12 +257,13 @@
        </div>
       </div>
       <div class="flex gap-3 mt-6">
-       <button type="button" onclick="closeModal()" class="flex-1 py-3 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50">取消</button> <button type="submit" class="flex-1 py-3 rounded-xl bg-amber-400 text-white font-medium hover:bg-amber-500">新增</button>
+       <button type="button" onclick="closeModal()" class="flex-1 py-3 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50">取消</button> <button type="submit" id="submit-coupon-btn" class="flex-1 py-3 rounded-xl bg-amber-400 text-white font-medium hover:bg-amber-500">新增</button>
       </div>
      </form>
     </div>
    </div>
-  </div><!-- FAB -->
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div><!-- FAB -->
   <div class="fab-container">
    <button type="button" onclick="openModal()" class="w-14 h-14 rounded-full bg-amber-400 hover:bg-amber-500 shadow-lg flex items-center justify-center text-white transition-transform hover:scale-110"><i data-lucide="plus" style="width:24px;height:24px;"></i></button>
   </div>
@@ -280,6 +284,9 @@
     const STORAGE_KEY = 'my_coupons_v2';
     const STORAGE_BACKUP_KEY = 'my_coupons_v2_backup';
     const LEGACY_STORAGE_KEYS = ['my_coupons', 'my_coupons_v1'];
+    const IMAGE_MAX_WIDTH = 1400;
+    const IMAGE_MAX_HEIGHT = 1400;
+    const IMAGE_QUALITY = 0.82;
     const ANNOUNCEMENTS = [
       { title: '歡迎使用 MyCoolPon', body: '你可以把連結型或圖片型酷碰卷集中保存在手機網頁中。', date: '2026-07-01' },
       { title: '記得備份資料', body: '酷碰卷會存在目前瀏覽器，換手機前建議先匯出 JSON 備份。', date: '2026-07-01' }
@@ -327,14 +334,32 @@
     let currentTab = 'unused';
     let galleryZoom = 1;
     let lastDistance = 0;
+    let isSavingCoupon = false;
+    let toastTimer = null;
 
     function save() {
-      const data = JSON.stringify(coupons.map(normalizeCoupon).filter(Boolean));
-      localStorage.setItem(STORAGE_KEY, data);
-      localStorage.setItem(STORAGE_BACKUP_KEY, data);
+      try {
+        const data = JSON.stringify(coupons.map(normalizeCoupon).filter(Boolean));
+        localStorage.setItem(STORAGE_KEY, data);
+        localStorage.setItem(STORAGE_BACKUP_KEY, data);
+        return true;
+      } catch (err) {
+        console.error('儲存失敗:', err);
+        showToast('儲存失敗：瀏覽器本機空間可能不足，請先匯出備份或刪除較大的圖片。');
+        return false;
+      }
     }
     function isExpired(d) { return d && new Date(d) < new Date(new Date().toDateString()); }
     function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    function showToast(message) {
+      const el = document.getElementById('toast');
+      if (!el) return;
+      el.textContent = message;
+      el.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+    }
 
     function switchTab(tab) {
       currentTab = tab;
@@ -380,7 +405,7 @@
         const expiryBadge = expired ? '<span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">已過期</span>'
           : c.expiry ? `<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">${c.expiry}</span>` : '';
         const typeTag = c.type === 'image' ? '<span class="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">圖片</span>' : '<span class="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">連結</span>';
-        const thumb = c.image ? `<img src="${c.image}" class="w-full h-32 object-cover rounded-xl mb-3 cursor-pointer" onclick="event.stopPropagation(); openGallery('${c.id}')">` : '<div class="w-full h-32 bg-amber-50 rounded-xl mb-3 flex items-center justify-center text-4xl">🎟️</div>';
+        const thumb = c.image ? `<img src="${c.image}" class="w-full h-32 object-cover rounded-xl mb-3 cursor-pointer" loading="lazy" decoding="async" onclick="event.stopPropagation(); openGallery('${c.id}')">` : '<div class="w-full h-32 bg-amber-50 rounded-xl mb-3 flex items-center justify-center text-4xl">🎟️</div>';
         const useLabel = c.used ? '標為未使用' : '標為已使用';
         const useColor = c.used ? 'text-amber-600' : 'text-green-600';
 
@@ -406,7 +431,7 @@
       document.getElementById('detail-name').textContent = c.name;
       let html = '<div class="space-y-4">';
       if (c.type === 'image' && c.image) {
-        html += `<div><img src="${c.image}" class="w-full rounded-xl cursor-pointer hover:opacity-90" onclick="openGallery('${id}')" style="max-height:300px;object-fit:cover;"></div>`;
+        html += `<div><img src="${c.image}" class="w-full rounded-xl cursor-pointer hover:opacity-90" loading="lazy" decoding="async" onclick="openGallery('${id}')" style="max-height:300px;object-fit:cover;"></div>`;
       } else if (c.type === 'link') {
         if (c.code) html += `<div><label class="text-xs font-medium text-gray-500">優惠碼</label><div class="flex items-center gap-2 mt-1"><span class="font-mono text-sm bg-gray-100 px-3 py-2 rounded flex-1">${esc(c.code)}</span><button onclick="copyCode('${esc(c.code)}')" class="text-amber-600 text-sm font-medium">複製</button></div></div>`;
         if (c.link) html += `<div><label class="text-xs font-medium text-gray-500">連結</label><a href="${esc(c.link)}" target="_blank" rel="noopener noreferrer" class="text-blue-500 underline text-sm block truncate mt-1">${esc(c.link)}</a></div>`;
@@ -578,7 +603,7 @@
           const imported = importedRaw.map(normalizeCoupon).filter(c => c && c.name);
           if (!imported.length) throw new Error('JSON 裡沒有可匯入的酷碰卷資料');
           coupons = mergeCoupons(imported);
-          save();
+          if (!save()) throw new Error('本機空間不足，無法儲存匯入資料');
           render();
           setImportStatus(`匯入完成：合併 ${imported.length} 筆，目前共 ${coupons.length} 筆。`, 'success');
         } catch (err) {
@@ -606,12 +631,12 @@
 
     function toggleUsed(id) {
       const c = coupons.find(x => x.id === id);
-      if (c) { c.used = !c.used; save(); render(); }
+      if (c) { c.used = !c.used; if (save()) render(); }
     }
 
     function confirmDel(id) {
       const btn = document.getElementById('del-' + id);
-      if (btn.dataset.confirm) { coupons = coupons.filter(x => x.id !== id); save(); render(); }
+      if (btn.dataset.confirm) { coupons = coupons.filter(x => x.id !== id); if (save()) render(); }
       else { btn.textContent = '確認刪除？'; btn.dataset.confirm = '1'; btn.classList.add('text-red-500'); setTimeout(() => { if (btn) { btn.textContent = '刪除'; delete btn.dataset.confirm; btn.classList.remove('text-red-500'); } }, 3000); }
     }
 
@@ -638,16 +663,50 @@
       document.getElementById('type-image-fields').classList.toggle('hidden', type !== 'image');
     }
 
-    function handleImageUpload(e) {
+    function fileToImage(file) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('圖片讀取失敗')); };
+        img.src = url;
+      });
+    }
+
+    async function compressImageFile(file) {
+      const img = await fileToImage(file);
+      const scale = Math.min(1, IMAGE_MAX_WIDTH / img.width, IMAGE_MAX_HEIGHT / img.height);
+      const width = Math.max(1, Math.round(img.width * scale));
+      const height = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      // 優先使用 WebP 減少 localStorage 容量；不支援時瀏覽器會自動回退。
+      let dataUrl = canvas.toDataURL('image/webp', IMAGE_QUALITY);
+      if (!dataUrl.startsWith('data:image/webp')) dataUrl = canvas.toDataURL('image/jpeg', IMAGE_QUALITY);
+      return dataUrl;
+    }
+
+    async function handleImageUpload(e) {
       const file = e.target.files?.[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        currentImage = evt.target.result;
+      if (!file.type.startsWith('image/')) {
+        showToast('請選擇圖片檔案。');
+        e.target.value = '';
+        return;
+      }
+      try {
+        showToast('正在壓縮圖片並儲存在本機...');
+        currentImage = await compressImageFile(file);
         document.getElementById('preview-img').src = currentImage;
         document.getElementById('image-preview').classList.remove('hidden');
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        console.error(err);
+        showToast('圖片處理失敗，請換一張圖片試試。');
+        e.target.value = '';
+      }
     }
 
     function removeImage() {
@@ -658,8 +717,17 @@
 
     function handleAddForm(e) {
       e.preventDefault();
+      if (isSavingCoupon) return;
       const name = document.getElementById('input-name').value.trim();
       if (!name) return;
+
+      isSavingCoupon = true;
+      const submitBtn = document.getElementById('submit-coupon-btn');
+      if (submitBtn) {
+        submitBtn.textContent = '儲存中...';
+        submitBtn.classList.add('saving-disabled');
+      }
+
       const coupon = { id: Date.now().toString(), name, type: currentType, used: false, createdAt: Date.now() };
       if (currentType === 'link') {
         const code = document.getElementById('input-code').value.trim();
@@ -673,10 +741,25 @@
       if (expiry) coupon.expiry = expiry;
       const notes = document.getElementById('input-notes').value.trim();
       if (notes) coupon.notes = notes;
+
       coupons.push(coupon);
-      save();
-      render();
-      closeModal();
+      if (save()) {
+        currentTab = 'unused';
+        document.getElementById('filter-type').value = 'all';
+        document.getElementById('sort-select').value = 'newest';
+        closeModal();
+        render();
+        switchTab('unused');
+        showToast('已新增並儲存在本機。');
+      } else {
+        coupons = coupons.filter(c => c.id !== coupon.id);
+      }
+
+      isSavingCoupon = false;
+      if (submitBtn) {
+        submitBtn.textContent = '新增';
+        submitBtn.classList.remove('saving-disabled');
+      }
     }
 
     render();
