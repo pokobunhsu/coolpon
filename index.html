@@ -3,6 +3,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>我的酷碰卷 MyCoolPon</title>
+  <meta name="theme-color" content="#f59e0b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="MyCoolPon">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet">
@@ -26,13 +34,35 @@
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
       scrollbar-width: none;
+      padding-bottom: max(120px, calc(env(safe-area-inset-bottom) + 112px));
+      scroll-padding-bottom: max(120px, calc(env(safe-area-inset-bottom) + 112px));
     }
     .app-main::-webkit-scrollbar { display: none; }
     .fab-container {
       position: fixed;
-      right: max(1.5rem, env(safe-area-inset-right));
-      bottom: max(1.5rem, env(safe-area-inset-bottom));
+      right: max(1rem, env(safe-area-inset-right));
+      bottom: max(1rem, env(safe-area-inset-bottom));
       z-index: 40;
+    }
+    .app-title {
+      min-width: 0;
+      line-height: 1.05;
+      color: rgb(26, 26, 26);
+      font-weight: 800;
+      font-style: normal;
+      font-size: clamp(17px, 5.1vw, 22px);
+      letter-spacing: -0.02em;
+    }
+    .app-title-sub {
+      display: inline-block;
+      color: #f59e0b;
+      font-size: 0.78em;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+    @media (max-width: 380px) {
+      .app-header-inner { padding-left: 12px !important; padding-right: 12px !important; }
+      .app-title-sub { display: block; margin-top: 2px; }
     }
     .md3-field { position: relative; display: flex; flex-direction: column; }
     .md3-field label {
@@ -126,6 +156,7 @@
     .toast { position: fixed; left: 50%; bottom: max(92px, calc(env(safe-area-inset-bottom) + 92px)); z-index: 80; transform: translateX(-50%) translateY(16px); opacity: 0; pointer-events: none; background: rgba(17,24,39,0.94); color: white; border-radius: 999px; padding: 11px 16px; font-size: 14px; font-weight: 700; box-shadow: 0 12px 30px rgba(0,0,0,0.18); transition: opacity 0.2s ease, transform 0.2s ease; max-width: calc(100vw - 32px); text-align: center; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     .saving-disabled { opacity: 0.65; pointer-events: none; }
+    .install-help { border-radius: 16px; border: 1px dashed #fbbf24; background: #fffbeb; padding: 12px; }
     .gesture-zoom-info { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; pointer-events: none; }
   </style>
   <script src="/_sdk/a57e1ce6823cfcdc.editing_sdk.js" integrity="sha512-kNK9Lfxs3JxWT717gHDYE+wlveaAj/VZXdy7sZdJAoa7Ps3DhgunLxr4od2Pr1ZqeSpJV2bST0X2ZhdP0AnInQ=="></script>
@@ -134,12 +165,11 @@
  </head>
  <body data-template-id="__page-root" class="overflow-hidden" style="background: rgb(248, 247, 244);">
   <header class="sticky top-0 z-10 backdrop-blur-md bg-white/80 border-b border-gray-100">
-   <div class="px-5 py-4 flex items-center justify-between">
-    <div class="flex items-center gap-3 min-w-0">
-     <button type="button" onclick="openMenu()" class="w-10 h-10 rounded-full bg-white hover:bg-amber-50 border border-gray-100 flex items-center justify-center text-gray-700 shadow-sm" aria-label="開啟選單"><i data-lucide="menu" style="width:22px;height:22px;"></i></button>
-     <h1 data-template-id="app-title" class="canva-text font-bold truncate" style="color: rgb(26, 26, 26); font-weight: 700; font-style: normal; font-size: 22px;">我的酷碰卷 <span class="text-amber-500">MyCoolPon</span></h1>
+   <div class="app-header-inner px-4 py-3 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-3 min-w-0 flex-1">
+     <button type="button" onclick="openMenu()" class="w-10 h-10 shrink-0 rounded-full bg-white hover:bg-amber-50 border border-gray-100 flex items-center justify-center text-gray-700 shadow-sm" aria-label="開啟選單"><i data-lucide="menu" style="width:22px;height:22px;"></i></button>
+     <h1 data-template-id="app-title" class="canva-text app-title">我的酷碰卷 <span class="app-title-sub">MyCoolPon</span></h1>
     </div>
-    <div class="w-10" aria-hidden="true"></div>
    </div>
   </header>
   <div id="side-menu-backdrop" class="side-menu-backdrop" onclick="closeMenu()"></div>
@@ -164,7 +194,7 @@
       <i data-lucide="database" style="width:18px;height:18px;color:#f59e0b;"></i>
       <h2 class="font-bold text-gray-900">資料備份 / 還原</h2>
      </div>
-     <p class="text-xs text-gray-500 leading-relaxed mb-3">可將目前酷碰卷備份成 JSON，換手機或換瀏覽器時再匯入。匯入會合併資料，相同 ID 會以匯入檔案為準。</p>
+     <p class="text-xs text-gray-500 leading-relaxed mb-3">目前程式使用 <b>localStorage</b> 儲存酷碰卷資料，圖片會先壓縮成 WebP/JPEG 後存在本機瀏覽器。匯出 JSON 會包含文字資料與圖片資料；匯入時採合併模式，相同 ID 會以匯入檔案為準。</p>
      <div class="space-y-2">
       <button type="button" onclick="exportCouponsToJson()" class="menu-action-btn w-full bg-amber-400 text-white hover:bg-amber-500">
        <i data-lucide="download" style="width:19px;height:19px;"></i>
@@ -178,9 +208,23 @@
       <div id="import-status" class="import-status text-xs text-gray-500"></div>
      </div>
     </section>
+    <section class="menu-card">
+     <div class="flex items-center gap-2 mb-3">
+      <i data-lucide="smartphone" style="width:18px;height:18px;color:#f59e0b;"></i>
+      <h2 class="font-bold text-gray-900">安裝到手機主畫面</h2>
+     </div>
+     <div class="install-help text-xs text-amber-800 leading-relaxed mb-3">
+      這個版本已加入 PWA 設定。網站部署到 HTTPS 後，Android Chrome 可用下方按鈕觸發安裝提示；iPhone Safari 可用分享選單的「加入主畫面」。
+     </div>
+     <button type="button" id="install-app-btn" onclick="installApp()" class="menu-action-btn w-full bg-white text-gray-700 border border-gray-200 hover:bg-amber-50 hidden">
+      <i data-lucide="download-cloud" style="width:19px;height:19px;"></i>
+      <span>安裝 MyCoolPon</span>
+     </button>
+     <div id="install-status" class="text-xs text-gray-500 mt-2">若未出現安裝按鈕，請確認網站使用 HTTPS，或從瀏覽器選單加入主畫面。</div>
+    </section>
    </div>
    <div class="mt-auto pt-4 text-xs text-gray-400 leading-relaxed">
-    資料會保存在此瀏覽器的 localStorage。只要網址網域與儲存 key 不變，更新網站功能不會清空既有酷碰卷；建議定期用 JSON 備份。
+    說明：目前資料保存在此瀏覽器的 localStorage，正式 key 固定為 my_coupons_v2，並同步寫入 my_coupons_v2_backup。圖片會先壓縮再本機儲存，不會上傳雲端；圖片很多時建議定期匯出 JSON 備份。
    </div>
   </aside>
   <main class="app-main px-4 py-4 max-w-3xl mx-auto">
@@ -265,7 +309,7 @@
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div><!-- FAB -->
   <div class="fab-container">
-   <button type="button" onclick="openModal()" class="w-14 h-14 rounded-full bg-amber-400 hover:bg-amber-500 shadow-lg flex items-center justify-center text-white transition-transform hover:scale-110"><i data-lucide="plus" style="width:24px;height:24px;"></i></button>
+   <button type="button" onclick="openModal()" class="w-14 h-14 rounded-full bg-amber-400 hover:bg-amber-500 shadow-lg flex items-center justify-center text-white transition-transform hover:scale-110" aria-label="新增酷碰卷"><i data-lucide="plus" style="width:24px;height:24px;"></i></button>
   </div>
   <script>
     // Fix Android Chrome address bar height
@@ -288,8 +332,8 @@
     const IMAGE_MAX_HEIGHT = 1400;
     const IMAGE_QUALITY = 0.82;
     const ANNOUNCEMENTS = [
-      { title: '歡迎使用 MyCoolPon', body: '你可以把連結型或圖片型酷碰卷集中保存在手機網頁中。', date: '2026-07-01' },
-      { title: '記得備份資料', body: '酷碰卷會存在目前瀏覽器，換手機前建議先匯出 JSON 備份。', date: '2026-07-01' }
+      { title: '本機儲存提醒', body: 'MyCoolPon 會把資料存在目前瀏覽器 localStorage；圖片會先壓縮後儲存，不會主動上傳雲端。', date: '2026-07-01' },
+      { title: '換手機前請先備份', body: '若要換裝置或換瀏覽器，請先從側邊選單匯出 JSON，再到新裝置匯入還原。', date: '2026-07-01' }
     ];
     function loadCoupons() {
       const keys = [STORAGE_KEY, ...LEGACY_STORAGE_KEYS];
@@ -336,6 +380,7 @@
     let lastDistance = 0;
     let isSavingCoupon = false;
     let toastTimer = null;
+    let deferredInstallPrompt = null;
 
     function save() {
       try {
@@ -618,6 +663,51 @@
         input.value = '';
       };
       reader.readAsText(file);
+    }
+
+    function updateInstallStatus(message) {
+      const el = document.getElementById('install-status');
+      if (el) el.textContent = message;
+    }
+
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      const btn = document.getElementById('install-app-btn');
+      if (btn) btn.classList.remove('hidden');
+      updateInstallStatus('可以安裝到主畫面。點擊「安裝 MyCoolPon」即可開啟瀏覽器安裝提示。');
+    });
+
+    window.addEventListener('appinstalled', function() {
+      deferredInstallPrompt = null;
+      const btn = document.getElementById('install-app-btn');
+      if (btn) btn.classList.add('hidden');
+      updateInstallStatus('MyCoolPon 已安裝到主畫面。');
+      showToast('MyCoolPon 已安裝到主畫面。');
+    });
+
+    async function installApp() {
+      if (!deferredInstallPrompt) {
+        updateInstallStatus('目前瀏覽器尚未提供安裝提示。Android Chrome 請確認使用 HTTPS；iPhone Safari 請用分享選單「加入主畫面」。');
+        return;
+      }
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice.catch(() => null);
+      deferredInstallPrompt = null;
+      const btn = document.getElementById('install-app-btn');
+      if (btn) btn.classList.add('hidden');
+      updateInstallStatus(choice && choice.outcome === 'accepted' ? '已開始安裝 MyCoolPon。' : '已取消安裝，可稍後再從瀏覽器選單加入主畫面。');
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('./sw.js').catch(function(err) {
+          console.warn('Service worker registration failed:', err);
+          updateInstallStatus('Service Worker 尚未啟用。請確認網站已透過 HTTPS 正確部署。');
+        });
+      });
+    } else {
+      updateInstallStatus('此瀏覽器不支援 PWA 安裝功能，但仍可正常使用本機儲存。');
     }
 
     document.addEventListener('keydown', function(e) {

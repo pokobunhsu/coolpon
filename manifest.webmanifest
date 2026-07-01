@@ -1,0 +1,25 @@
+{
+  "name": "我的酷碰卷 MyCoolPon",
+  "short_name": "MyCoolPon",
+  "description": "本機儲存酷碰卷、支援 JSON 備份與匯入的手機網頁 App。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8f7f4",
+  "theme_color": "#f59e0b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
