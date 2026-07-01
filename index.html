@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="zh-TW"><head><script>window["__codeletBootstrap__"]=JSON.parse('{"A":"A","B":"20260701-05-1ec4861"}');</script><script src="/_sdk/f432b76fb310b513.telemetry_sdk.js" integrity="sha512-9FJQ55EKmmqhyyik8BhrMVfm0+iYYfb8uOlRsjtkxJMEI97qOVEI4PnHohDjQAtvAep0IOEpdQ64eki0sz62ug=="></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的酷碰卷 MyCoolPon</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      position: fixed;
+      inset: 0;
+      min-height: 100dvh;
+    }
+    .app-main {
+      height: calc(var(--app-height, 100dvh) - 73px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      scrollbar-width: none;
+    }
+    .app-main::-webkit-scrollbar { display: none; }
+    .fab-container {
+      position: fixed;
+      right: max(1.5rem, env(safe-area-inset-right));
+      bottom: max(1.5rem, env(safe-area-inset-bottom));
+      z-index: 40;
+    }
+    .md3-field { position: relative; display: flex; flex-direction: column; }
+    .md3-field label {
+      font-size: 11px; color: #f59e0b; margin-bottom: 4px; font-weight: 500;
+    }
+    .md3-field input, .md3-field textarea {
+      width: 100%; background: #f5f0eb; border: none; border-bottom: 2px solid #c4b99f;
+      border-radius: 12px 12px 0 0; padding: 12px 16px; font-size: 14px;
+      transition: border-color 0.2s; outline: none;
+    }
+    .md3-field input:focus, .md3-field textarea:focus { border-bottom-color: #f59e0b; }
+    .img-upload-zone {
+      border: 2px dashed #d4c9b8; border-radius: 16px; padding: 20px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; transition: border-color 0.2s; min-height: 100px;
+    }
+    .img-upload-zone:hover { border-color: #f59e0b; }
+    @keyframes modal-enter {
+      from { opacity: 0; transform: translate3d(0, 16px, 0) scale(0.98); }
+      to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+    }
+    .animate-slide-up {
+      animation: modal-enter 0.18s ease-out both;
+      backface-visibility: hidden;
+      transform: translateZ(0);
+      will-change: transform, opacity;
+    }
+    @keyframes zoom-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .animate-zoom-in { animation: zoom-in 0.2s ease-out; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 50; display: flex; flex-direction: column; }
+    .modal-content-wrapper { display: flex; flex-direction: column; height: 100%; justify-content: flex-end; overflow: hidden; -webkit-overflow-scrolling: touch; }
+    @media (min-width: 640px) { .modal-content-wrapper { justify-content: center; } }
+    .modal-inner { max-width: 32rem; width: 100%; margin: 0 auto; border-radius: 24px; background: white; padding: 24px 24px 32px; max-height: 90vh; overflow-y: auto; overscroll-behavior: contain; }
+    @media (max-width: 639px) { .modal-inner { border-radius: 24px 24px 0 0; max-height: calc(var(--app-height, 100dvh) - 40px); } }
+    .modal-form-group input:focus, .modal-form-group textarea:focus {
+      position: relative; z-index: 1;
+    }
+    @supports (padding: max(0px)) {
+      @media (max-width: 639px) {
+        .modal-inner { padding-bottom: max(32px, env(safe-area-inset-bottom)); }
+      }
+    }
+    input, textarea { font-size: 16px !important; }
+    @media (max-width: 639px) {
+      .md3-field input, .md3-field textarea { font-size: 16px !important; }
+    }
+    .type-btn { padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 2px solid #e5e7eb; transition: all 0.2s; cursor: pointer; }
+    .type-btn.active { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+    .tab-btn { padding: 10px 16px; font-size: 14px; font-weight: 700; border-radius: 12px; transition: all 0.2s; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+    .tab-btn.active { background: #f59e0b; color: #fff; }
+    .tab-btn:not(.active) { background: #f3f4f6; color: #6b7280; }
+    .tab-count { min-width: 24px; height: 22px; padding: 0 7px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; line-height: 1; }
+    .tab-btn.active .tab-count { background: rgba(255,255,255,0.25); color: #fff; }
+    .tab-btn:not(.active) .tab-count { background: #fff; color: #6b7280; }
+    .coupon-card { transition: transform 0.15s, box-shadow 0.15s; }
+    .coupon-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+    .gallery-container { overflow: hidden; position: relative; touch-action: none; }
+
+    .use-action-btn {
+      min-height: 44px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      transition: transform 0.15s, background-color 0.15s;
+    }
+    .use-action-btn:active { transform: scale(0.98); }
+    .delete-action-btn {
+      min-height: 44px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .side-menu-backdrop { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,0.35); opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+    .side-menu-backdrop.open { opacity: 1; pointer-events: auto; }
+    .side-menu-panel { position: fixed; top: 0; bottom: 0; left: 0; z-index: 61; width: min(82vw, 320px); background: white; box-shadow: 12px 0 30px rgba(0,0,0,0.12); transform: translateX(-102%); transition: transform 0.22s ease; padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; }
+    .side-menu-panel.open { transform: translateX(0); }
+    .menu-card { border-radius: 20px; background: #f9fafb; border: 1px solid #f3f4f6; padding: 14px; }
+    .announcement-item { border-radius: 14px; background: #fff; padding: 12px; border: 1px solid #f3f4f6; }
+    .menu-action-btn { min-height: 48px; border-radius: 16px; padding: 12px 14px; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 800; transition: transform 0.15s, background-color 0.15s; }
+    .menu-action-btn:active { transform: scale(0.98); }
+    .import-status { min-height: 18px; }
+    .gesture-zoom-info { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; pointer-events: none; }
+  </style>
+  <script src="/_sdk/a57e1ce6823cfcdc.editing_sdk.js" integrity="sha512-kNK9Lfxs3JxWT717gHDYE+wlveaAj/VZXdy7sZdJAoa7Ps3DhgunLxr4od2Pr1ZqeSpJV2bST0X2ZhdP0AnInQ=="></script>
+  <script src="/_sdk/0179d719c431a79e.data_sdk.js" type="text/javascript" integrity="sha512-OsRvJkI5GkC3MJQcgotQYotpzrMSX415GiKKgvYdxQEEkzD/fdchShO2FMSy0PJr/tiINMXOk5Vl2zAgg6bUiA=="></script>
+  <script src="/_sdk/0b3af1c300e720aa.resizing_sdk.js" type="text/javascript" integrity="sha512-nX1P6oXZmEY5wCI2lUVg3BwKu1cr0yi+ZpXgZ0Yn90vkSwvpmyzBMvOyD6VLJUtBwFI2dSrw1b6OvORxSggw3w=="></script>
+ </head>
+ <body data-template-id="__page-root" class="overflow-hidden" style="background: rgb(248, 247, 244);">
+  <header class="sticky top-0 z-10 backdrop-blur-md bg-white/80 border-b border-gray-100">
+   <div class="px-5 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3 min-w-0">
+     <button type="button" onclick="openMenu()" class="w-10 h-10 rounded-full bg-white hover:bg-amber-50 border border-gray-100 flex items-center justify-center text-gray-700 shadow-sm" aria-label="開啟選單"><i data-lucide="menu" style="width:22px;height:22px;"></i></button>
+     <h1 data-template-id="app-title" class="canva-text font-bold truncate" style="color: rgb(26, 26, 26); font-weight: 700; font-style: normal; font-size: 22px;">我的酷碰卷 <span class="text-amber-500">MyCoolPon</span></h1>
+    </div>
+    <div class="w-10" aria-hidden="true"></div>
+   </div>
+  </header>
+  <div id="side-menu-backdrop" class="side-menu-backdrop" onclick="closeMenu()"></div>
+  <aside id="side-menu" class="side-menu-panel" aria-hidden="true">
+   <div class="flex items-center justify-between mb-6">
+    <div>
+     <div class="text-xs text-gray-400 font-semibold uppercase tracking-wide">MyCoolPon</div>
+     <div class="text-xl font-bold text-gray-900">我的酷碰卷</div>
+    </div>
+    <button type="button" onclick="closeMenu()" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200" aria-label="關閉選單"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
+   </div>
+   <div class="space-y-4 overflow-y-auto pr-1" style="scrollbar-width:none;">
+    <section class="menu-card">
+     <div class="flex items-center gap-2 mb-3">
+      <i data-lucide="megaphone" style="width:18px;height:18px;color:#f59e0b;"></i>
+      <h2 class="font-bold text-gray-900">公告訊息</h2>
+     </div>
+     <div id="announcement-list" class="space-y-2"></div>
+    </section>
+    <section class="menu-card">
+     <div class="flex items-center gap-2 mb-3">
+      <i data-lucide="database" style="width:18px;height:18px;color:#f59e0b;"></i>
+      <h2 class="font-bold text-gray-900">資料備份 / 還原</h2>
+     </div>
+     <p class="text-xs text-gray-500 leading-relaxed mb-3">可將目前酷碰卷備份成 JSON，換手機或換瀏覽器時再匯入。匯入會合併資料，相同 ID 會以匯入檔案為準。</p>
+     <div class="space-y-2">
+      <button type="button" onclick="exportCouponsToJson()" class="menu-action-btn w-full bg-amber-400 text-white hover:bg-amber-500">
+       <i data-lucide="download" style="width:19px;height:19px;"></i>
+       <span>匯出 JSON 備份</span>
+      </button>
+      <button type="button" onclick="document.getElementById('import-json-input').click()" class="menu-action-btn w-full bg-white text-gray-700 border border-gray-200 hover:bg-amber-50">
+       <i data-lucide="upload" style="width:19px;height:19px;"></i>
+       <span>匯入 JSON 還原</span>
+      </button>
+      <input type="file" id="import-json-input" accept="application/json,.json" class="hidden" onchange="importCouponsFromJson(event)">
+      <div id="import-status" class="import-status text-xs text-gray-500"></div>
+     </div>
+    </section>
+   </div>
+   <div class="mt-auto pt-4 text-xs text-gray-400 leading-relaxed">
+    資料會保存在此瀏覽器的 localStorage。只要網址網域與儲存 key 不變，更新網站功能不會清空既有酷碰卷；建議定期用 JSON 備份。
+   </div>
+  </aside>
+  <main class="app-main px-4 py-4 max-w-3xl mx-auto">
+   <div class="flex gap-2 mb-4">
+    <button class="tab-btn active" id="tab-unused" onclick="switchTab('unused')">未使用 <span id="unused-count" class="tab-count">0</span></button> <button class="tab-btn" id="tab-used" onclick="switchTab('used')">已使用 <span id="used-count" class="tab-count">0</span></button>
+   </div>
+   <div class="flex flex-wrap gap-2 mb-4 items-center">
+    <select id="sort-select" onchange="render()" class="text-sm bg-white border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-amber-400"> <option value="expiry">依到期日排序</option> <option value="name">依名稱排序</option> <option value="newest">最新新增</option> </select> <select id="filter-type" onchange="render()" class="text-sm bg-white border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-amber-400"> <option value="all">全部類型</option> <option value="link">連結型</option> <option value="image">圖片型</option> </select>
+   </div>
+   <div id="empty-state" class="hidden text-center py-16">
+    <div class="text-5xl mb-4">
+     🎟️
+    </div>
+    <p data-template-id="empty-text" class="canva-text" style="color: rgb(156, 163, 175); font-weight: 400; font-style: normal; font-size: 16px;">還沒有酷碰卷</p>
+   </div>
+   <div id="empty-used" class="hidden text-center py-16">
+    <div class="text-5xl mb-4">
+     ✅
+    </div>
+    <p data-template-id="empty-used-text" class="canva-text" style="color: rgb(156, 163, 175); font-weight: 400; font-style: normal; font-size: 16px;">沒有已使用的酷碰卷</p>
+   </div>
+   <div id="coupon-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+  </main><!-- Detail Modal -->
+  <div id="detail-modal" class="fixed inset-0 z-50 hidden bg-black/50" onclick="if(event.target===this)closeDetailModal()">
+   <div class="min-h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 animate-zoom-in max-h-[90vh] overflow-y-auto">
+     <div class="flex justify-between items-center mb-4">
+      <h3 id="detail-name" class="font-bold text-lg"></h3><button type="button" onclick="closeDetailModal()" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+     </div>
+     <div id="detail-content"></div>
+    </div>
+   </div>
+  </div><!-- Gallery Modal -->
+  <div id="gallery-modal" class="fixed inset-0 z-50 hidden bg-black" onclick="if(event.target===this||event.target.closest('.gallery-container'))return; closeGalleryModal()">
+   <button type="button" onclick="closeGalleryModal()" class="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-gray-800/80 hover:bg-gray-700 flex items-center justify-center text-white"><i data-lucide="x" style="width:20px;height:20px"></i></button>
+   <div class="w-full h-full flex items-center justify-center gallery-container overflow-hidden" style="touch-action: none;">
+    <img id="gallery-img" class="max-w-full max-h-full" style="cursor:grab; user-select:none; will-change:transform; transform-origin: center center;">
+    <div class="gesture-zoom-info">
+     用滑鼠滾輪或雙指縮放
+    </div>
+   </div>
+  </div><!-- Add Modal -->
+  <div id="modal" class="hidden modal-backdrop" onclick="if(event.target===this)closeModal()">
+   <div class="modal-content-wrapper">
+    <div class="modal-inner animate-slide-up">
+     <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-bold text-gray-900">新增酷碰卷</h2><button type="button" onclick="closeModal()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+     </div>
+     <form id="add-form" onsubmit="handleAddForm(event)">
+      <div class="space-y-4 modal-form-group">
+       <div class="md3-field"><input type="text" id="input-name" placeholder=" " required=""><label for="input-name">酷碰卷名稱</label>
+       </div>
+       <div class="flex gap-3">
+        <button type="button" class="type-btn active" data-type="link" onclick="setType('link')">連結型</button> <button type="button" class="type-btn" data-type="image" onclick="setType('image')">圖片型</button>
+       </div>
+       <div id="type-link-fields" class="space-y-4">
+        <div class="md3-field"><input type="text" id="input-code" placeholder=" "><label for="input-code">優惠碼 (選填)</label>
+        </div>
+        <div class="md3-field"><input type="url" id="input-link" placeholder=" "><label for="input-link">連結網址 (選填)</label>
+        </div>
+       </div>
+       <div id="type-image-fields" class="hidden space-y-4">
+        <div class="img-upload-zone" onclick="document.getElementById('image-input').click()">
+         <i data-lucide="upload" style="width:32px;height:32px;color:#b8a089;margin-bottom:8px;"></i>
+         <p class="text-sm text-gray-600">點擊上傳圖片或拖曳放置</p><input type="file" id="image-input" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
+        </div>
+        <div id="image-preview" class="hidden">
+         <img id="preview-img" class="w-full h-32 object-cover rounded-xl"> <button type="button" onclick="removeImage()" class="mt-2 text-sm text-red-500 hover:text-red-700">移除圖片</button>
+        </div>
+       </div>
+       <div class="md3-field"><input type="date" id="input-expiry" placeholder=" "><label for="input-expiry">到期日期 (選填)</label>
+       </div>
+       <div class="md3-field"><textarea id="input-notes" placeholder=" " rows="3"></textarea><label for="input-notes">備註 (選填)</label>
+       </div>
+      </div>
+      <div class="flex gap-3 mt-6">
+       <button type="button" onclick="closeModal()" class="flex-1 py-3 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50">取消</button> <button type="submit" class="flex-1 py-3 rounded-xl bg-amber-400 text-white font-medium hover:bg-amber-500">新增</button>
+      </div>
+     </form>
+    </div>
+   </div>
+  </div><!-- FAB -->
+  <div class="fab-container">
+   <button type="button" onclick="openModal()" class="w-14 h-14 rounded-full bg-amber-400 hover:bg-amber-500 shadow-lg flex items-center justify-center text-white transition-transform hover:scale-110"><i data-lucide="plus" style="width:24px;height:24px;"></i></button>
+  </div>
+  <script>
+    // Fix Android Chrome address bar height
+    function updateVhVariable() {
+      const modal = document.getElementById('modal');
+      if (modal && !modal.classList.contains('hidden')) return;
+      const vh = window.visualViewport?.height || window.innerHeight;
+      document.documentElement.style.setProperty('--app-height', vh + 'px');
+      document.documentElement.style.setProperty('--vh', vh + 'px');
+    }
+    window.addEventListener('resize', updateVhVariable);
+    window.addEventListener('orientationchange', updateVhVariable);
+    window.visualViewport?.addEventListener('resize', updateVhVariable);
+    updateVhVariable();
+
+    const STORAGE_KEY = 'my_coupons_v2';
+    const STORAGE_BACKUP_KEY = 'my_coupons_v2_backup';
+    const LEGACY_STORAGE_KEYS = ['my_coupons', 'my_coupons_v1'];
+    const ANNOUNCEMENTS = [
+      { title: '歡迎使用 MyCoolPon', body: '你可以把連結型或圖片型酷碰卷集中保存在手機網頁中。', date: '2026-07-01' },
+      { title: '記得備份資料', body: '酷碰卷會存在目前瀏覽器，換手機前建議先匯出 JSON 備份。', date: '2026-07-01' }
+    ];
+    function loadCoupons() {
+      const keys = [STORAGE_KEY, ...LEGACY_STORAGE_KEYS];
+      for (const key of keys) {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            const normalized = parsed.map(normalizeCoupon).filter(Boolean);
+            // 保持使用同一個正式 key，避免日後功能更新換 key 造成資料看似遺失。
+            if (key !== STORAGE_KEY) localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+            localStorage.setItem(STORAGE_BACKUP_KEY, JSON.stringify(normalized));
+            return normalized;
+          }
+        } catch (err) {
+          console.warn('localStorage coupons parse failed:', key, err);
+        }
+      }
+      return [];
+    }
+
+    function normalizeCoupon(c) {
+      if (!c || typeof c !== 'object') return null;
+      return {
+        id: String(c.id || Date.now() + Math.random()),
+        name: String(c.name || ''),
+        type: c.type === 'image' ? 'image' : 'link',
+        used: !!c.used,
+        createdAt: Number(c.createdAt || Date.now()),
+        ...(c.code ? { code: String(c.code) } : {}),
+        ...(c.link ? { link: String(c.link) } : {}),
+        ...(c.image ? { image: String(c.image) } : {}),
+        ...(c.expiry ? { expiry: String(c.expiry) } : {}),
+        ...(c.notes ? { notes: String(c.notes) } : {})
+      };
+    }
+
+    let coupons = loadCoupons();
+    let currentImage = null;
+    let currentType = 'link';
+    let currentTab = 'unused';
+    let galleryZoom = 1;
+    let lastDistance = 0;
+
+    function save() {
+      const data = JSON.stringify(coupons.map(normalizeCoupon).filter(Boolean));
+      localStorage.setItem(STORAGE_KEY, data);
+      localStorage.setItem(STORAGE_BACKUP_KEY, data);
+    }
+    function isExpired(d) { return d && new Date(d) < new Date(new Date().toDateString()); }
+    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.getElementById('tab-unused').classList.toggle('active', tab === 'unused');
+      document.getElementById('tab-used').classList.toggle('active', tab === 'used');
+      render();
+    }
+
+    function getFiltered() {
+      const filterType = document.getElementById('filter-type').value;
+      let items = coupons.filter(c => currentTab === 'unused' ? !c.used : !!c.used);
+      if (filterType !== 'all') items = items.filter(c => c.type === filterType);
+      const sortBy = document.getElementById('sort-select').value;
+      items.sort((a, b) => {
+        if (sortBy === 'expiry') {
+          const ae = isExpired(a.expiry), be = isExpired(b.expiry);
+          if (ae !== be) return ae ? 1 : -1;
+          if (a.expiry && b.expiry) return new Date(a.expiry) - new Date(b.expiry);
+          return a.expiry ? -1 : b.expiry ? 1 : 0;
+        } else if (sortBy === 'name') {
+          return (a.name || '').localeCompare(b.name || '');
+        }
+        return (b.createdAt || 0) - (a.createdAt || 0);
+      });
+      return items;
+    }
+
+    function render() {
+      const list = document.getElementById('coupon-list');
+      const items = getFiltered();
+      const unusedCount = coupons.filter(c => !c.used).length;
+      const usedCount = coupons.filter(c => !!c.used).length;
+      document.getElementById('unused-count').textContent = unusedCount;
+      document.getElementById('used-count').textContent = usedCount;
+
+      document.getElementById('empty-state').classList.toggle('hidden', !(items.length === 0 && currentTab === 'unused'));
+      document.getElementById('empty-used').classList.toggle('hidden', !(items.length === 0 && currentTab === 'used'));
+
+      if (items.length === 0) { list.innerHTML = ''; return; }
+
+      list.innerHTML = items.map(c => {
+        const expired = isExpired(c.expiry);
+        const expiryBadge = expired ? '<span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">已過期</span>'
+          : c.expiry ? `<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">${c.expiry}</span>` : '';
+        const typeTag = c.type === 'image' ? '<span class="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">圖片</span>' : '<span class="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">連結</span>';
+        const thumb = c.image ? `<img src="${c.image}" class="w-full h-32 object-cover rounded-xl mb-3 cursor-pointer" onclick="event.stopPropagation(); openGallery('${c.id}')">` : '<div class="w-full h-32 bg-amber-50 rounded-xl mb-3 flex items-center justify-center text-4xl">🎟️</div>';
+        const useLabel = c.used ? '標為未使用' : '標為已使用';
+        const useColor = c.used ? 'text-amber-600' : 'text-green-600';
+
+        return `<div class="coupon-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden p-4 cursor-pointer ${expired && !c.used ? 'opacity-70' : ''}" onclick="openDetail('${c.id}')">
+          ${thumb}
+          <div class="flex items-start justify-between mb-2"><h3 class="font-semibold text-sm text-gray-900 leading-tight">${esc(c.name)}</h3></div>
+          <div class="flex flex-wrap gap-1.5 mb-3">${typeTag}${expiryBadge}</div>
+          ${c.code ? `<div class="flex items-center gap-2 mb-2"><span class="font-mono text-xs bg-gray-100 px-2 py-1 rounded">${esc(c.code)}</span><button onclick="event.stopPropagation(); copyCode('${esc(c.code)}')" class="text-amber-600 text-xs font-medium">複製</button></div>` : ''}
+          ${c.link ? `<a href="${esc(c.link)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-blue-500 underline text-xs block truncate mb-2">${esc(c.link)}</a>` : ''}
+          ${c.notes ? `<p class="text-gray-400 text-xs mb-2">${esc(c.notes)}</p>` : ''}
+          <div class="flex gap-3 pt-3 border-t border-gray-50">
+            <button onclick="event.stopPropagation(); toggleUsed('${c.id}')" class="use-action-btn ${c.used ? 'bg-amber-50 text-amber-700 hover:bg-amber-100' : 'bg-green-50 text-green-700 hover:bg-green-100'}">${useLabel}</button>
+            <button onclick="event.stopPropagation(); confirmDel('${c.id}')" class="delete-action-btn text-gray-500 hover:text-red-500 hover:bg-red-50" id="del-${c.id}">刪除</button>
+          </div>
+        </div>`;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function openDetail(id) {
+      const c = coupons.find(x => x.id === id);
+      if (!c) return;
+      document.getElementById('detail-name').textContent = c.name;
+      let html = '<div class="space-y-4">';
+      if (c.type === 'image' && c.image) {
+        html += `<div><img src="${c.image}" class="w-full rounded-xl cursor-pointer hover:opacity-90" onclick="openGallery('${id}')" style="max-height:300px;object-fit:cover;"></div>`;
+      } else if (c.type === 'link') {
+        if (c.code) html += `<div><label class="text-xs font-medium text-gray-500">優惠碼</label><div class="flex items-center gap-2 mt-1"><span class="font-mono text-sm bg-gray-100 px-3 py-2 rounded flex-1">${esc(c.code)}</span><button onclick="copyCode('${esc(c.code)}')" class="text-amber-600 text-sm font-medium">複製</button></div></div>`;
+        if (c.link) html += `<div><label class="text-xs font-medium text-gray-500">連結</label><a href="${esc(c.link)}" target="_blank" rel="noopener noreferrer" class="text-blue-500 underline text-sm block truncate mt-1">${esc(c.link)}</a></div>`;
+      }
+      if (c.expiry) {
+        const exp = isExpired(c.expiry);
+        html += `<div><label class="text-xs font-medium text-gray-500">到期日</label><div class="text-sm mt-1 font-medium ${exp ? 'text-red-600' : 'text-green-700'}">${c.expiry}${exp ? ' (已過期)' : ''}</div></div>`;
+      }
+      if (c.notes) html += `<div><label class="text-xs font-medium text-gray-500">備註</label><p class="text-sm text-gray-700 mt-1 whitespace-pre-wrap">${esc(c.notes)}</p></div>`;
+      html += '</div>';
+      document.getElementById('detail-content').innerHTML = html;
+      document.getElementById('detail-modal').classList.remove('hidden');
+    }
+
+    function closeDetailModal() { document.getElementById('detail-modal').classList.add('hidden'); }
+
+    function openGallery(id) {
+      const c = coupons.find(x => x.id === id);
+      if (!c || !c.image) return;
+      galleryZoom = 1;
+      const img = document.getElementById('gallery-img');
+      img.src = c.image;
+      img.style.transform = 'scale(1)';
+      document.getElementById('gallery-modal').classList.remove('hidden');
+    }
+
+    function closeGalleryModal() { document.getElementById('gallery-modal').classList.add('hidden'); }
+
+    // Gallery zoom via wheel
+    document.addEventListener('wheel', function(e) {
+      if (document.getElementById('gallery-modal').classList.contains('hidden')) return;
+      e.preventDefault();
+      galleryZoom = Math.max(1, Math.min(galleryZoom + (e.deltaY > 0 ? -0.1 : 0.1), 3));
+      document.getElementById('gallery-img').style.transform = `scale(${galleryZoom})`;
+    }, { passive: false });
+
+    // Gallery zoom via pinch
+    document.addEventListener('touchmove', function(e) {
+      if (document.getElementById('gallery-modal').classList.contains('hidden') || e.touches.length !== 2) return;
+      e.preventDefault();
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+      if (lastDistance > 0) {
+        const scaleFactor = (distance - lastDistance) / 100;
+        galleryZoom = Math.max(1, Math.min(galleryZoom + scaleFactor, 3));
+        
+        // Calculate pinch center point
+        const midX = (touch1.clientX + touch2.clientX) / 2;
+        const midY = (touch1.clientY + touch2.clientY) / 2;
+        
+        // Get container and image dimensions
+        const container = document.querySelector('.gallery-container');
+        const img = document.getElementById('gallery-img');
+        const containerRect = container.getBoundingClientRect();
+        const imgRect = img.getBoundingClientRect();
+        
+        // Calculate position relative to image center
+        const imgCenterX = (imgRect.left + imgRect.right) / 2;
+        const imgCenterY = (imgRect.top + imgRect.bottom) / 2;
+        
+        // Offset from current image center
+        const offsetX = midX - imgCenterX;
+        const offsetY = midY - imgCenterY;
+        
+        // Update transform origin based on pinch point
+        const originX = 50 + (offsetX / imgRect.width) * 50;
+        const originY = 50 + (offsetY / imgRect.height) * 50;
+        
+        img.style.transformOrigin = originX + '% ' + originY + '%';
+        img.style.transform = `scale(${galleryZoom})`;
+      }
+      lastDistance = distance;
+    }, { passive: false });
+
+    document.addEventListener('touchend', function(e) {
+      if (document.getElementById('gallery-modal').classList.contains('hidden')) return;
+      lastDistance = 0;
+    }, { passive: false });
+
+
+    function openMenu() {
+      document.getElementById('side-menu').classList.add('open');
+      document.getElementById('side-menu-backdrop').classList.add('open');
+      document.getElementById('side-menu').setAttribute('aria-hidden', 'false');
+    }
+
+    function closeMenu() {
+      document.getElementById('side-menu').classList.remove('open');
+      document.getElementById('side-menu-backdrop').classList.remove('open');
+      document.getElementById('side-menu').setAttribute('aria-hidden', 'true');
+    }
+
+    function renderAnnouncements() {
+      const list = document.getElementById('announcement-list');
+      if (!list) return;
+      if (!ANNOUNCEMENTS.length) {
+        list.innerHTML = '<div class="text-sm text-gray-400">目前沒有公告。</div>';
+        return;
+      }
+      list.innerHTML = ANNOUNCEMENTS.map(item => `
+        <article class="announcement-item">
+          <div class="flex items-start justify-between gap-2 mb-1">
+            <h3 class="text-sm font-bold text-gray-800">${esc(item.title)}</h3>
+            <span class="text-[11px] text-gray-400 whitespace-nowrap">${esc(item.date)}</span>
+          </div>
+          <p class="text-xs text-gray-500 leading-relaxed">${esc(item.body)}</p>
+        </article>
+      `).join('');
+    }
+
+    function getExportPayload() {
+      return {
+        app: 'MyCoolPon',
+        version: 3,
+        storageKey: STORAGE_KEY,
+        exportedAt: new Date().toISOString(),
+        coupons: coupons.map(normalizeCoupon).filter(Boolean)
+      };
+    }
+
+    function exportCouponsToJson() {
+      const payload = getExportPayload();
+      const json = JSON.stringify(payload, null, 2);
+      const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const date = new Date().toISOString().slice(0, 10).replaceAll('-', '');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `mycoolpon-backup-${date}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setImportStatus(`已匯出 ${payload.coupons.length} 筆酷碰卷備份。`, 'success');
+    }
+
+    function setImportStatus(message, type = 'info') {
+      const el = document.getElementById('import-status');
+      if (!el) return;
+      el.textContent = message;
+      el.className = 'import-status text-xs ' + (type === 'error' ? 'text-red-500' : type === 'success' ? 'text-green-600' : 'text-gray-500');
+    }
+
+    function extractCouponsFromImport(parsed) {
+      if (Array.isArray(parsed)) return parsed;
+      if (parsed && Array.isArray(parsed.coupons)) return parsed.coupons;
+      if (parsed && parsed.data && Array.isArray(parsed.data.coupons)) return parsed.data.coupons;
+      return null;
+    }
+
+    function mergeCoupons(imported) {
+      const map = new Map();
+      coupons.map(normalizeCoupon).filter(Boolean).forEach(c => map.set(c.id, c));
+      imported.map(normalizeCoupon).filter(Boolean).forEach(c => map.set(c.id, c));
+      return Array.from(map.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    }
+
+    function importCouponsFromJson(event) {
+      const input = event.target;
+      const file = input.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(String(reader.result || ''));
+          const importedRaw = extractCouponsFromImport(parsed);
+          if (!importedRaw) throw new Error('JSON 格式不符合 MyCoolPon 備份格式');
+          const imported = importedRaw.map(normalizeCoupon).filter(c => c && c.name);
+          if (!imported.length) throw new Error('JSON 裡沒有可匯入的酷碰卷資料');
+          coupons = mergeCoupons(imported);
+          save();
+          render();
+          setImportStatus(`匯入完成：合併 ${imported.length} 筆，目前共 ${coupons.length} 筆。`, 'success');
+        } catch (err) {
+          console.error(err);
+          setImportStatus('匯入失敗：請確認檔案是 MyCoolPon 匯出的 JSON。', 'error');
+        } finally {
+          input.value = '';
+        }
+      };
+      reader.onerror = () => {
+        setImportStatus('匯入失敗：檔案讀取發生問題。', 'error');
+        input.value = '';
+      };
+      reader.readAsText(file);
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeMenu();
+        closeDetailModal();
+        closeGalleryModal();
+        closeModal();
+      }
+    });
+
+    function toggleUsed(id) {
+      const c = coupons.find(x => x.id === id);
+      if (c) { c.used = !c.used; save(); render(); }
+    }
+
+    function confirmDel(id) {
+      const btn = document.getElementById('del-' + id);
+      if (btn.dataset.confirm) { coupons = coupons.filter(x => x.id !== id); save(); render(); }
+      else { btn.textContent = '確認刪除？'; btn.dataset.confirm = '1'; btn.classList.add('text-red-500'); setTimeout(() => { if (btn) { btn.textContent = '刪除'; delete btn.dataset.confirm; btn.classList.remove('text-red-500'); } }, 3000); }
+    }
+
+    function copyCode(code) { navigator.clipboard.writeText(code).catch(() => {}); }
+
+    function openModal() {
+      document.getElementById('modal').classList.remove('hidden');
+      // 不自動 focus，避免手機鍵盤彈出造成 visualViewport 高度改變，導致視窗打開時抖動。
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.add('hidden');
+      document.getElementById('add-form').reset();
+      currentType = 'link';
+      currentImage = null;
+      setType('link');
+      document.getElementById('image-preview').classList.add('hidden');
+    }
+
+    function setType(type) {
+      currentType = type;
+      document.querySelectorAll('.type-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.type === type));
+      document.getElementById('type-link-fields').classList.toggle('hidden', type !== 'link');
+      document.getElementById('type-image-fields').classList.toggle('hidden', type !== 'image');
+    }
+
+    function handleImageUpload(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        currentImage = evt.target.result;
+        document.getElementById('preview-img').src = currentImage;
+        document.getElementById('image-preview').classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeImage() {
+      currentImage = null;
+      document.getElementById('image-input').value = '';
+      document.getElementById('image-preview').classList.add('hidden');
+    }
+
+    function handleAddForm(e) {
+      e.preventDefault();
+      const name = document.getElementById('input-name').value.trim();
+      if (!name) return;
+      const coupon = { id: Date.now().toString(), name, type: currentType, used: false, createdAt: Date.now() };
+      if (currentType === 'link') {
+        const code = document.getElementById('input-code').value.trim();
+        const link = document.getElementById('input-link').value.trim();
+        if (code) coupon.code = code;
+        if (link) coupon.link = link;
+      } else if (currentImage) {
+        coupon.image = currentImage;
+      }
+      const expiry = document.getElementById('input-expiry').value.trim();
+      if (expiry) coupon.expiry = expiry;
+      const notes = document.getElementById('input-notes').value.trim();
+      if (notes) coupon.notes = notes;
+      coupons.push(coupon);
+      save();
+      render();
+      closeModal();
+    }
+
+    render();
+    renderAnnouncements();
+    lucide.createIcons();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a146401a461e4a54',t:'MTc4MjkxNzcxMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+</body></html>
